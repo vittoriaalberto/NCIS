@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Ambienti virtuali
+venv/
+.venv/
+
+# Streamlit e IDE
+.streamlit/
+.vscode/
+.DS_Store
+
+# File generati a runtime e log
+*.log
+ryu.log
+
+# Dati del traffico
+# Decommentare la riga sotto se non si vuole caricare il CSV su GitHub
+# traffic_data.csv
