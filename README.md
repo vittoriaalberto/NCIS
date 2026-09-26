@@ -1,163 +1,79 @@
-# 🌐 SDN Network Slicer — NCIS Project
+# Network Slicing in SDN with Ryu and Mininet  
+### Course Project – Network and Cloud Infrastructures  
+M.Sc. in Computer Engineering — University of Naples Federico II (A.Y. 2024/2025)
 
-> **Network & Cloud Infrastructures** — Progetto d'Esame  
-> Implementazione di **Topology Slicing** con **Dynamic Slicing** e **classificazione ML del traffico** su rete SDN emulata con Mininet e Ryu.
+This repository contains the project developed for the *Network and Cloud Infrastructures* course.  
+The work implements static, service-based, and dynamic network slicing in an SDN environment using Mininet as the network emulator and Ryu as the SDN controller. 
+In addition, this project extends the base requirements with a real-time monitoring dashboard and a Machine Learning-based traffic classifier.
+
+---
+## Technologies Used
+- Python 3
+- Ryu SDN Framework (OpenFlow 1.3)
+- Mininet
+- Open vSwitch (OVS)
+- Streamlit (for the dashboard)
+- scikit-learn, pandas (for ML classification)
+- iperf
 
 ---
 
-## 📡 Architettura
+## 📡 Architecture and Base Topology
+The SDN network consists of **4 hosts** and **6 OpenFlow switches (OVS)** organized into two parallel paths:
 
-La rete SDN è composta da **4 host** e **6 switch OpenFlow (OVS)** organizzati in due percorsi paralleli:
-
-```
+```text
         H1 --+                              +-- H3
              S1 -- S2 -- S4 -- S6  (10 Mbps | Upper Slice - Video)
-             S1 -- S3 -- S5 -- S6   (1 Mbps | Lower Slice - Dati)
+             S1 -- S3 -- S5 -- S6   (1 Mbps | Lower Slice - Data)
         H2 --+                              +-- H4
 
-        Controller: Ryu (OpenFlow 1.3) -- Dynamic Slicing attivo
+        Controller: Ryu (OpenFlow 1.3) -- Dynamic Slicing Enabled
 ```
 
-| Slice | Hosts | Percorso | Banda |
-|---|---|---|---|
-| **Upper Slice** | H1 <-> H3 | S1->S2->S4->S6 | 10 Mbps |
-| **Lower Slice** | H2 <-> H4 | S1->S3->S5->S6 | 1 Mbps |
+A logical separation enforces isolation between the two slices:
+- **Upper Slice:** H1 ↔ H3 (10 Mbps)
+- **Lower Slice:** H2 ↔ H4 (1 Mbps)
+
+The controller enforces isolation, MAC learning, and OpenFlow 1.3 flow modification.
 
 ---
 
-## 🚀 Estensioni Implementate
+## 🚀 Extensions Overview
 
-| Estensione | Descrizione | Stato |
-|---|---|---|
-| **1. Dashboard** | Monitoraggio live + analisi ML in Streamlit | OK |
-| **2. Classificazione Avanzata** | L1 (MAC/Port-based) + L2 (K-Means su packet statistics) | OK |
-| **3. Dynamic Slicing** | Lower Slice usa Upper (10 Mbps) quando il video e' inattivo | OK |
+The implementation focuses on three advanced extensions:
 
----
+### 1. Real-time Dashboard
+A live monitoring dashboard developed with Streamlit that provides real-time visualization of network statistics directly from the Ryu controller. 
 
-## Requisiti
+**Modules:**
+- **Live Monitor:** Real-time metrics for both slices (estimated bandwidth, cumulative volume), Dynamic Slicing status banner (Fast Lane ON/OFF), and area charts for traffic trends.
+- **ML Analysis & Classification:** Deep dive into the K-Means unsupervised classification, showing cluster distribution and comparing L1 vs L2 accuracy.
+- **Network Topology:** Interactive SVG visualization of the network with adaptive colors and switch details.
 
-### Sulla VM (Mininet)
-```bash
-# Mininet + Open vSwitch
-sudo apt install mininet openvswitch-switch
+### 2. ML-based Traffic Classification
+Traffic is classified using an unsupervised Machine Learning approach (K-Means algorithm).
+Instead of relying on simple port numbers, the classifier uses packet statistics to dynamically group flows.
 
-# Ryu controller
-pip install ryu
+- **Level 1 - Port/MAC-based (Deterministic):** The controller uses eth_src/eth_dst to route flows. It acts as the ground truth.
+- **Level 2 - K-Means (Unsupervised):** Analyzes `byte_count` and `packet_count` via StandardScaler. It has no knowledge of MACs, IPs, or ports, autonomously discovering high-bandwidth (video) and low-bandwidth (data) categories.
 
-# Dashboard dependencies
-pip install streamlit pandas scikit-learn
-```
+### 3. Dynamic Slicing
+Non-video traffic from the Lower Slice is dynamically rerouted to the Upper Slice when video traffic is inactive, ensuring resource optimization while keeping video priority.
+The controller periodically measures the bandwidth used by video flows:
 
-### Opzionale: D-ITG (traffico piu' realistico)
-```bash
-sudo apt install d-itg
-```
-
----
-
-## Come avviare il progetto
-
-### 1. Avvia il controller Ryu
-```bash
-ryu-manager main_controller.py
-```
-
-### 2. Avvia la topologia Mininet (in un altro terminale)
-```bash
-sudo python3 slicing_topo.py
-```
-
-### 3. Genera traffico (dalla CLI di Mininet)
-```bash
-# Traffico video - Upper Slice (H1 -> H3)
-source video_traffic.sh
-
-# Traffico dati - Lower Slice (H2 -> H4)
-source normal_traffic.sh
-```
-
-### 4. Avvia la dashboard
-```bash
-streamlit run app.py
-```
-La dashboard sara' accessibile su `http://localhost:8501`
-
----
-
-## Dashboard — Moduli
-
-### Live Monitor
-- Metriche in tempo reale per le due slice (banda stimata, volume cumulativo)
-- Banner Dynamic Slicing con stato corrente (Fast Lane ON/OFF)
-- Area chart per Upper e Lower Slice
-
-### Analisi ML e Classificazione
-- **Classificazione L1** (deterministica): identifica i flussi tramite MAC src/dst
-- **Classificazione L2** (K-Means): usa solo byte_count e packet_count, senza conoscere MAC o IP
-- **Confronto L1 vs L2**: percentuale di coerenza tra i due classificatori
-
-### Topologia di Rete
-- Visualizzazione SVG della rete con colori adattativi
-- Tabella dettaglio switch
-- Stato corrente Dynamic Slicing
-
----
-
-## Struttura del Progetto
-
-```
-Progetto/
-+-- app.py                          # Entry point Streamlit
-+-- main_controller.py              # Controller Ryu
-+-- slicing_topo.py                 # Topologia Mininet (6 switch)
-+-- video_traffic.sh                # Genera traffico video
-+-- normal_traffic.sh               # Genera traffico dati
-+-- traffic_data.csv                # Dati raccolti dal controller
-+-- dashboard/
-    +-- utils.py                    # Costanti, stile e funzioni di utilita' condivise
-    +-- pages/
-        +-- live_monitor.py         # Pagina monitoraggio live
-        +-- ml_analysis.py          # Pagina analisi ML
-        +-- topology.py             # Pagina topologia SVG
-```
-
----
-
-## Dynamic Slicing — Logica
-
-Il controller monitora la banda del flusso video ogni 10 secondi:
-
-```
+```text
 bandwidth_video = (delta_byte * 8) / (10s * 1_000_000)  ->  Mbps
 
 if bandwidth_video < 0.5 Mbps:
-    Sposta Lower Slice su Upper (10 Mbps) -- Fast Lane attiva
+    Move Lower Slice to Upper path (10 Mbps) -- Fast Lane active
 else:
-    Riporta Lower Slice su Lower (1 Mbps) -- priorita' al video
+    Move Lower Slice back to Lower path (1 Mbps) -- Video priority
 ```
 
 ---
+## How to Run
 
-## Classificazione a Due Livelli
-
-```
-Livello 1 - Port/MAC-based (deterministico)
-  Il controller usa eth_src/eth_dst per instradare i flussi.
-  Corrisponde al matching per porta nelle flow-table OpenFlow.
-  Fornisce il ground truth per validare il modello ML.
-
-Livello 2 - K-Means su packet statistics (non supervisionato)
-  Input: solo byte_count + packet_count normalizzati (StandardScaler).
-  Nessuna conoscenza di MAC, IP o porte.
-  Scopre autonomamente le 2 categorie di traffico.
-  La coerenza con L1 viene calcolata e mostrata nella dashboard.
-```
-
----
-
-## Note
-
-- Il file `traffic_data.csv` viene generato automaticamente dal controller.
-- Per abilitare la classificazione D-ITG (port-based a livello OpenFlow),
-  cercare i commenti `[D-ITG]` in `main_controller.py` e seguire le istruzioni.
+1. **Start the Mininet Topology:** `sudo python3 slicing_topo.py`
+2. **Start the Ryu Controller:** `ryu-manager main_controller.py`
+3. **Generate Traffic (Mininet CLI):** `source video_traffic.sh` and `source normal_traffic.sh`
+4. **Launch the Dashboard:** `streamlit run app.py`
