@@ -1,6 +1,6 @@
 # Network Slicing in SDN with Ryu and Mininet  
 ### Course Project – Network and Cloud Infrastructures  
-M.Sc. in Computer Engineering — University of Naples Federico II (A.Y. 2024/2025)
+M.Sc. in Computer Engineering — University of Naples Federico II
 
 This repository contains the project developed for the *Network and Cloud Infrastructures* course.  
 The work implements static, service-based, and dynamic network slicing in an SDN environment using Mininet as the network emulator and Ryu as the SDN controller. 
@@ -71,9 +71,33 @@ else:
 ```
 
 ---
+## Prerequisites
+
+Before running the project, ensure you have a Linux environment (e.g., an Ubuntu VM) with the required tools installed:
+
+```bash
+# System dependencies
+sudo apt update
+sudo apt install mininet openvswitch-switch tshark -y
+
+# Python dependencies
+pip install ryu streamlit pandas scikit-learn
+```
+
+---
 ## How to Run
 
 1. **Start the Mininet Topology:** `sudo python3 slicing_topo.py`
 2. **Start the Ryu Controller:** `ryu-manager main_controller.py`
 3. **Generate Traffic (Mininet CLI):** `source video_traffic.sh` and `source normal_traffic.sh`
 4. **Launch the Dashboard:** `streamlit run app.py`
+
+### Testing Dynamic Slicing with tshark
+To physically verify the routing changes on the switch interfaces, monitor the links of the entry switch (`S1`) in separate terminals:
+- Upper Slice (10 Mbps): `sudo tshark -i s1-eth3 -f "tcp"`
+- Lower Slice (1 Mbps): `sudo tshark -i s1-eth4 -f "tcp"`
+
+**Test Execution:**
+1. Start data traffic: `mininet> source normal_traffic.sh`. Packets will flow on `s1-eth4`.
+2. Wait ~10 seconds. Since video traffic is absent, data traffic will automatically migrate to the faster `s1-eth3`.
+3. Start video traffic: `mininet> source video_traffic.sh`. Video takes priority on `s1-eth3`, and data is instantly pushed back to `s1-eth4`.
