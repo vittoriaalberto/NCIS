@@ -21,7 +21,7 @@ Inoltre, il progetto estende i requisiti di base introducendo una dashboard di m
 ## Architettura e Topologia di Base
 La rete SDN è composta da **4 host** e **6 switch OpenFlow (OVS)** organizzati su due percorsi paralleli:
 
-![Topologia di Rete](img/Topologia.png)
+![Topologia di Rete](docs/Topologia.png)
 
 Una separazione logica garantisce l'isolamento tra le due slice:
 - **Upper Slice:** H1 ↔ H3 (10 Mbps)
