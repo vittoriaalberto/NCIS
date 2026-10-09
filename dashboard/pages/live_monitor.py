@@ -20,7 +20,7 @@ def render() -> None:
     st.markdown("""
     <div class="hero-header">
         <p class="hero-title">🔴 Network Traffic Monitor</p>
-        <p class="hero-subtitle">Finestra mobile — ultimi 30 campioni · Classificazione L1 in tempo reale</p>
+        <p class="hero-subtitle">Finestra mobile — ultimi 30 campioni · Classificazione Deterministica in tempo reale</p>
         <span class="badge-live">LIVE</span>
     </div>
     """, unsafe_allow_html=True)

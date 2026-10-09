@@ -15,6 +15,3 @@ venv/
 *.log
 ryu.log
 
-# Dati del traffico
-# Decommentare la riga sotto se non si vuole caricare il CSV su GitHub
-# traffic_data.csv

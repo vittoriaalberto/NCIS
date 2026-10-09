@@ -4,21 +4,11 @@ from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISP
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet, ethernet, ether_types
-# from ryu.lib.packet import ipv4, udp  # Decommentare se si usa D-ITG
 from ryu.lib import hub
 from datetime import datetime
 import csv
 import os
 
-# ══════════════════════════════════════════════════════════
-# [D-ITG] Costanti per classificazione L1 Port/Protocol-based
-# Attivare decommentando il blocco qui sotto E le sezioni
-# [D-ITG] in packet_in_handler quando si usa D-ITG al posto di iPerf.
-# ══════════════════════════════════════════════════════════
-# DITG_VIDEO_DST_PORT = 8999   # porta destinazione traffico video (H1 -> H3)
-# DITG_DATA_DST_PORT  = 9000   # porta destinazione traffico dati  (H2 -> H4)
-# IPV4_ETHERTYPE      = 0x0800
-# IPPROTO_UDP         = 17
 
 class SlicingMonitorController(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -95,13 +85,13 @@ class SlicingMonitorController(app_manager.RyuApp):
             
             # Se Video < 0.5 Mbps, abilita la Fast Lane per i Dati
             if bw_mbps < 0.5 and not self.fast_lane_active:
-                self.logger.info("⚡ SLICING DINAMICO: Video Inattivo (%.2f Mbps). Sposto Dati su Slice 10Mbps!", bw_mbps)
+                self.logger.info("SLICING DINAMICO: Video Inattivo (%.2f Mbps). Sposto Dati su Slice 10Mbps", bw_mbps)
                 self.fast_lane_active = True
                 self._reroute_data_slice()
                 
             # Se Video >= 0.5 Mbps, riduci i Dati sulla Slow Lane
             elif bw_mbps >= 0.5 and self.fast_lane_active:
-                self.logger.info("🛑 SLICING DINAMICO: Video Attivo (%.2f Mbps). Ritorno Dati su Slice 1Mbps!", bw_mbps)
+                self.logger.info("SLICING DINAMICO: Video Attivo (%.2f Mbps). Ritorno Dati su Slice 1Mbps", bw_mbps)
                 self.fast_lane_active = False
                 self._reroute_data_slice()
 
@@ -156,19 +146,6 @@ class SlicingMonitorController(app_manager.RyuApp):
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             return
 
-        # [D-ITG] Classificazione L1 Port/Protocol-based
-        # Decommentare questo blocco (e il blocco nel match sotto) quando
-        # si usa D-ITG: aggiunge ip_proto + udp_dst al match OpenFlow.
-        #
-        # ip_proto_val = None
-        # udp_dst_val  = None
-        # if eth.ethertype == IPV4_ETHERTYPE:
-        #     ip_pkt = pkt.get_protocol(ipv4.ipv4)
-        #     if ip_pkt and ip_pkt.proto == IPPROTO_UDP:
-        #         ip_proto_val = IPPROTO_UDP
-        #         udp_pkt = pkt.get_protocol(udp.udp)
-        #         if udp_pkt:
-        #             udp_dst_val = udp_pkt.dst_port
 
         src = eth.src
         dst = eth.dst
@@ -222,18 +199,6 @@ class SlicingMonitorController(app_manager.RyuApp):
 
         if out_port != ofproto.OFPP_FLOOD:
             match = parser.OFPMatch(in_port=in_port, eth_dst=dst, eth_src=src)
-            # [D-ITG] Match port-based: decommentare il blocco sotto e commentare
-            # la riga 'match' sopra quando si usa D-ITG con gli import/costanti attivi.
-            #
-            # if ip_proto_val is not None and udp_dst_val is not None:
-            #     match = parser.OFPMatch(
-            #         in_port=in_port, eth_dst=dst, eth_src=src,
-            #         eth_type=IPV4_ETHERTYPE,
-            #         ip_proto=ip_proto_val,
-            #         udp_dst=udp_dst_val
-            #     )
-            # else:
-            #     match = parser.OFPMatch(in_port=in_port, eth_dst=dst, eth_src=src)
 
             if dst != 'ff:ff:ff:ff:ff:ff':
                 if msg.buffer_id != ofproto.OFP_NO_BUFFER:

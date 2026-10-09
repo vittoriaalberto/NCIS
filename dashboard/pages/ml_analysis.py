@@ -36,7 +36,7 @@ def render() -> None:
     <div class="hero-header">
         <p class="hero-title">🧠 Analisi ML & Classificazione</p>
         <p class="hero-subtitle">
-            Classificazione a due livelli: Port/MAC-based (L1) + K-Means su packet statistics (L2)
+            Classificazione a due livelli: Deterministica (Port/MAC-based) + Machine Learning (K-Means)
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -78,7 +78,7 @@ def render() -> None:
     # ════════════════════════════════════════════
     # 2. Classificazione L1 – Port/MAC-based
     # ════════════════════════════════════════════
-    st.markdown("### 2️⃣ Classificazione L1 – Port/MAC-based")
+    st.markdown("### 2️⃣ Classificazione Deterministica – Port/MAC-based")
     st.markdown("""
     <div class="glass-card">
     <div style="color:#94a3b8;font-size:0.9rem;">
@@ -94,7 +94,7 @@ def render() -> None:
 
     la, lb = st.columns([2, 3])
     with la:
-        st.markdown("**Distribuzione Classi L1**")
+        st.markdown("**Distribuzione Classi (Deterministica)**")
         d = df_l1['Classe L1'].value_counts().reset_index()
         d.columns = ['Classe', 'Conteggio']
         st.dataframe(d, use_container_width=True, hide_index=True)
@@ -107,9 +107,9 @@ def render() -> None:
     st.markdown("---")
 
     # ════════════════════════════════════════════
-    # 3. Classificazione L2 – K-Means ML
+    # 3. Classificazione Statistica – K-Means ML
     # ════════════════════════════════════════════
-    st.markdown("### 3️⃣ Classificazione L2 – K-Means (Packet Statistics)")
+    st.markdown("### 3️⃣ Classificazione Statistica – K-Means (Packet Statistics)")
     st.markdown("""
     <div class="glass-card">
     <div style="color:#94a3b8;font-size:0.9rem;">
@@ -147,7 +147,7 @@ def render() -> None:
     # ════════════════════════════════════════════
     # 4. Confronto L1 ↔ L2
     # ════════════════════════════════════════════
-    st.markdown("### 4️⃣ Confronto L1 (Port-based) ↔ L2 (ML-based)")
+    st.markdown("### 4️⃣ Confronto Deterministico ↔ Machine Learning")
     st.markdown(
         '<div class="info-box">L\'alta coerenza tra i due classificatori dimostra che le '
         '<b>statistiche di traffico</b> (byte + pacchetti) sono sufficienti a discriminare le slice '
@@ -166,7 +166,7 @@ def render() -> None:
     acc = df_cmp['✅ Coerente'].mean() * 100
 
     a1, a2 = st.columns(2)
-    a1.metric("🎯 Coerenza L1 ↔ L2", f"{acc:.1f}%",
+    a1.metric("🎯 Coerenza Deterministico ↔ ML", f"{acc:.1f}%",
               delta="Alta" if acc > 80 else "Da analizzare")
     a2.metric("📊 Campioni analizzati", f"{len(df_cmp):,}")
 
