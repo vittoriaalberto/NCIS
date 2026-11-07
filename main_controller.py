@@ -15,7 +15,6 @@ class SlicingMonitorController(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(SlicingMonitorController, self).__init__(*args, **kwargs)
-        self.mac_to_port = {}
         self.datapaths = {}
         self.csv_file = 'traffic_data.csv'
         
